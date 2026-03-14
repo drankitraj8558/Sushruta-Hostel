@@ -10,44 +10,79 @@
 <body class="bg-slate-50 text-gray-800">
 
     <nav class="flex justify-between items-center p-4 bg-white shadow-sm sticky top-0 z-50">
-        <div class="font-bold text-blue-700 text-xl">Sushruta Hostel <br><span class="text-xs text-gray-500 font-normal">Maulana Azad Medical College</span></div>
+        <div class="font-bold text-blue-700 text-xl leading-tight">Sushruta Hostel <br><span class="text-xs text-gray-500 font-normal italic">Maulana Azad Medical College</span></div>
         <div class="hidden md:flex gap-6 text-sm font-medium">
-            <a href="#">Facilities</a>
-            <a href="#">Notices</a>
-            <a href="#">Directory</a>
-            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg">Admin Login</button>
+            <a href="#facilities" class="hover:text-blue-600">Facilities</a>
+            <a href="#notices" class="hover:text-blue-600">Notices</a>
+            <a href="#directory" class="hover:text-blue-600">Directory</a>
         </div>
     </nav>
 
     <header class="p-8 md:p-16 flex flex-col md:flex-row items-center gap-10">
         <div class="flex-1">
-            <h1 class="text-4xl font-bold mb-4">Welcome to <span class="text-blue-600">Sushruta Hostel</span></h1>
-            <p class="text-gray-600 mb-6">A comfortable and supportive living environment for medical students at the heart of MAMC Campus.</p>
+            <h1 class="text-4xl font-bold mb-4">Welcome to <span class="text-blue-600 text-5xl block">Sushruta Hostel</span></h1>
+            <p class="text-gray-600 mb-6 text-lg">Official portal for residents. Stay updated with mess menus, notices, and hostel facilities.</p>
             <div class="flex gap-4">
-                <button class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg">Explore Facilities</button>
-                <button class="border border-gray-300 px-6 py-3 rounded-full">Get in Touch</button>
+                <a href="#notices" class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg font-bold">Check Notices</a>
+                <button class="border border-gray-300 px-6 py-3 rounded-full hover:bg-gray-100">Contact Admin</button>
             </div>
         </div>
-        <div class="flex-1 bg-blue-100 h-64 w-full rounded-2xl flex items-center justify-center">
-             <i class="fa-solid fa-hospital-user text-6xl text-blue-600"></i>
+        <div class="flex-1 bg-blue-600 h-64 w-full rounded-2xl flex items-center justify-center shadow-2xl">
+             <i class="fa-solid fa-user-doctor text-7xl text-white"></i>
         </div>
     </header>
 
-    <section class="p-8 bg-white">
-        <h2 class="text-2xl font-bold text-center mb-8">Latest Notices</h2>
-        <div id="notice-container" class="grid gap-4 max-w-2xl mx-auto">
-            <div class="border-l-4 border-blue-600 p-4 bg-blue-50 rounded-r-lg">
-                <span class="text-xs text-blue-600 font-bold">MARCH 15, 2026</span>
-                <h3 class="font-bold">Welcome to the new portal!</h3>
-                <p class="text-sm">The digital directory and notice board are now live.</p>
-            </div>
+    <section id="notices" class="p-8 bg-white">
+        <h2 class="text-3xl font-bold text-center mb-2">Notice Board</h2>
+        <p class="text-center text-gray-500 mb-8 italic">Updated live from Hostel Office</p>
+        
+        <div id="notice-container" class="grid gap-6 max-w-2xl mx-auto text-center py-10">
+            <p class="text-blue-500 animate-pulse">Loading latest notices...</p>
         </div>
     </section>
 
     <footer class="p-10 bg-slate-900 text-white text-center mt-10">
-        <p>&copy; 2026 Sushruta Hostel, MAMC. For Students, By Students.</p>
+        <p class="opacity-70">&copy; 2026 Sushruta Hostel, MAMC.</p>
+        <p class="text-xs mt-2 text-blue-400">Created by Students for Students</p>
     </footer>
 
-</body>
-  </html>
+    <script>
+        const SHEET_ID = '1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk';
+        const SHEET_TITLE = 'Notices';
+        const SHEET_RANGE = 'A2:C20'; // Reads Date, Title, Message
+        
+        const FULL_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_TITLE}&range=${SHEET_RANGE}`;
 
+        fetch(FULL_URL)
+        .then(res => res.text())
+        .then(rep => {
+            const data = JSON.parse(rep.substr(47).slice(0, -2));
+            const container = document.getElementById('notice-container');
+            container.innerHTML = ''; // Clear the loading text
+            
+            data.table.rows.forEach(row => {
+                const date = row.c[0] ? row.c[0].f : '';
+                const title = row.c[1] ? row.c[1].v : '';
+                const msg = row.c[2] ? row.c[2].v : '';
+
+                const noticeHtml = `
+                    <div class="border-l-8 border-blue-600 p-6 bg-blue-50 rounded-r-xl shadow-sm text-left transition transform hover:scale-105">
+                        <span class="text-xs text-blue-700 font-bold uppercase tracking-widest">${date}</span>
+                        <h3 class="font-bold text-xl mt-1 text-slate-800">${title}</h3>
+                        <p class="text-gray-600 mt-2 leading-relaxed">${msg}</p>
+                    </div>
+                `;
+                container.innerHTML += noticeHtml;
+            });
+
+            if(data.table.rows.length === 0) {
+                container.innerHTML = '<p class="text-gray-400">No active notices at the moment.</p>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('notice-container').innerHTML = '<p class="text-red-500">Error loading notices. Please check connection.</p>';
+        });
+    </script>
+</body>
+</html>
