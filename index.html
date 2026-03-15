@@ -73,7 +73,7 @@
     }
 
     // 1. FETCH NOTICES (Forced to tab name 'Notices')
-    const noticeURL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?sheet=Notices";
+    const noticeURL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=out:json&sheet=Notices";
     fetch(noticeURL)
     .then(res => res.text()).then(rep => {
         const data = JSON.parse(rep.substr(47).slice(0, -2));
@@ -93,7 +93,7 @@
 
     // 2. FETCH DIRECTORY (Forced to tab name 'Directory')
     let allStudents = [];
-    const directoryURL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?sheet=Directory";
+    const directoryURL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=out:json&sheet=Directory";
     
     fetch(directoryURL)
     .then(res => res.text()).then(rep => {
