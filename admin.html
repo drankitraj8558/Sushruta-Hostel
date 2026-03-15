@@ -78,33 +78,37 @@
             document.getElementById('tab-' + tab).classList.remove('hidden');
         }
 
-        function loadPending() {
-    const SHEET_ID = '1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk';
-    // CRITICAL: We added &sheet=Directory to the URL below
-    const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Directory&tqx=out:json`;
+                function loadPending() {
+            const SHEET_ID = "1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk";
+            
+            // BULLETPROOF URL using plus signs instead of backticks
+            const URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?sheet=Directory";
 
-    fetch(URL).then(res => res.text()).then(rep => {
-        const data = JSON.parse(rep.substr(47).slice(0, -2));
-        const container = document.getElementById('pending-container');
-        container.innerHTML = '';
-        let count = 0;
-        data.table.rows.forEach(row => {
-            const status = row.c[5] ? row.c[5].v : '';
-            // This makes it work regardless of "Approved", "approved", or "APPROVED"
-            if(String(status).toUpperCase() !== 'APPROVED') {
-                count++;
-                container.innerHTML += `
-                    <div class="bg-slate-800 p-5 rounded-xl border-l-4 border-yellow-500 shadow-lg text-left mb-4">
-                        <h3 class="font-bold text-lg text-white">${row.c[1]?.v || 'New User'}</h3>
-                        <p class="text-sm text-slate-400 font-bold">BATCH: ${row.c[2]?.v} | ROOM: ${row.c[3]?.v}</p>
-                    </div>`;
-            }
-        });
-        if(count === 0) container.innerHTML = "✅ All residents verified!";
-    });
-}
-
+            fetch(URL).then(res => res.text()).then(rep => {
+                const data = JSON.parse(rep.substr(47).slice(0, -2));
+                const container = document.getElementById('pending-container');
+                container.innerHTML = '';
+                let count = 0;
+                
+                data.table.rows.forEach(row => {
+                    const status = row.c[5] ? row.c[5].v : '';
+                    
+                    if(String(status).toUpperCase() !== 'APPROVED') {
+                        count++;
+                        container.innerHTML += `
+                            <div class="bg-slate-800 p-5 rounded-xl border-l-4 border-yellow-500 shadow-lg text-left mb-4">
+                                <h3 class="font-bold text-lg text-white">${row.c[1]?.v || 'New User'}</h3>
+                                <p class="text-sm text-slate-400 font-bold">BATCH: ${row.c[2]?.v} | ROOM: ${row.c[3]?.v}</p>
+                            </div>`;
+                    }
+                });
+                
+                if(count === 0) container.innerHTML = "✅ All residents verified!";
+            }).catch(err => {
+                document.getElementById('pending-container').innerHTML = "Connection Error. Check Sheet ID.";
+            });
         }
+
     </script>
 </body>
 </html>
