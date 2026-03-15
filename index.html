@@ -64,74 +64,78 @@
             </div>
     </div>
 
-    <script>
-    const SHEET_ID = '1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk';
+        <script>
+        const SHEET_ID = "1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk";
 
-    function showView(view) {
-        document.getElementById('home-view').classList.toggle('hidden', view !== 'home');
-        document.getElementById('directory-view').classList.toggle('hidden', view !== 'directory');
-    }
-
-    // 1. FETCH ONLY NOTICES (Tab 1)
-    fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Notices`)
-    .then(res => res.text()).then(rep => {
-        const data = JSON.parse(rep.substr(47).slice(0, -2));
-        const container = document.getElementById('notice-container');
-        container.innerHTML = '';
-        data.table.rows.forEach(row => {
-            // Check if this row actually looks like a notice (Title in Col B)
-            if(row.c[1] && row.c[1].v) {
-                container.innerHTML += `
-                    <div class="p-5 bg-white rounded-2xl shadow-sm border border-slate-100">
-                        <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded mb-2 inline-block uppercase">${row.c[0]?.f || 'NOTICE'}</span>
-                        <h3 class="font-bold text-slate-800 text-lg">${row.c[1].v}</h3>
-                        <p class="text-sm text-slate-500 mt-2">${row.c[2]?.v || ''}</p>
-                    </div>`;
-            }
-        });
-    });
-
-    // 2. FETCH DIRECTORY (Tab 2) + SEARCH LOGIC
-    let allStudents = [];
-    fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Directory`)
-    .then(res => res.text()).then(rep => {
-        const data = JSON.parse(rep.substr(47).slice(0, -2));
-        allStudents = data.table.rows;
-        // No need to call filter yet, it will run when user types
-    });
-
-    function filterDirectory() {
-        const nQuery = document.getElementById('nameSearch').value.toLowerCase();
-        const bQuery = document.getElementById('batchSearch').value.toLowerCase();
-        const rQuery = document.getElementById('roomSearch').value.toLowerCase();
-        const container = document.getElementById('directory-container');
-        
-        container.innerHTML = '';
-        
-        allStudents.forEach(row => {
-            const name = String(row.c[1]?.v || '').toLowerCase();
-            const batch = String(row.c[2]?.v || '').toLowerCase();
-            const room = String(row.c[3]?.v || '').toLowerCase();
-            const status = String(row.c[5]?.v || '').toUpperCase();
-
-            // SEARCH LOGIC: Match name AND batch AND room
-            if(status === 'APPROVED' && name.includes(nQuery) && batch.includes(bQuery) && room.includes(rQuery)) {
-                container.innerHTML += `
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center mb-3">
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-lg capitalize">${row.c[1]?.v}</h3>
-                            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-tight">BATCH: ${row.c[2]?.v} | ROOM: ${row.c[3]?.v}</p>
-                        </div>
-                        <a href="tel:${row.c[4]?.v}" class="bg-blue-600 text-white h-10 w-10 rounded-full flex items-center justify-center shadow-lg"><i class="fa-solid fa-phone text-sm"></i></a>
-                    </div>`;
-            }
-        });
-        
-        if(container.innerHTML === '') {
-            container.innerHTML = '<p class="text-center text-slate-300 py-10">No verified residents found.</p>';
+        function showView(view) {
+            document.getElementById('home-view').classList.toggle('hidden', view !== 'home');
+            document.getElementById('directory-view').classList.toggle('hidden', view !== 'directory');
+            window.scrollTo(0,0);
         }
-    }
-</script>
+
+        // 1. FETCH NOTICES (Forces Tab 1)
+        const noticeURL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?sheet=Notices";
+        fetch(noticeURL)
+        .then(res => res.text()).then(rep => {
+            const data = JSON.parse(rep.substr(47).slice(0, -2));
+            const container = document.getElementById('notice-container');
+            container.innerHTML = '';
+            data.table.rows.forEach(row => {
+                if(row.c[1] && row.c[1].v) {
+                    container.innerHTML += `
+                        <div class="p-5 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                            <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded mb-2 inline-block uppercase tracking-wider">${row.c[0]?.f || row.c[0]?.v || 'UPDATE'}</span>
+                            <h3 class="font-bold text-slate-800 text-lg">${row.c[1]?.v || ''}</h3>
+                            <p class="text-sm text-slate-500 mt-2 leading-relaxed">${row.c[2]?.v || ''}</p>
+                        </div>`;
+                }
+            });
+        });
+
+        // 2. FETCH DIRECTORY & ENABLE SEARCH (Forces Tab 2)
+        const directoryURL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?sheet=Directory";
+        let allStudents = [];
+        
+        fetch(directoryURL)
+        .then(res => res.text()).then(rep => {
+            const data = JSON.parse(rep.substr(47).slice(0, -2));
+            allStudents = data.table.rows;
+            filterDirectory(); // Loads list immediately
+        });
+
+        function filterDirectory() {
+            const nQuery = document.getElementById('nameSearch').value.toLowerCase();
+            const bQuery = document.getElementById('batchSearch').value.toLowerCase();
+            const rQuery = document.getElementById('roomSearch').value.toLowerCase();
+            const container = document.getElementById('directory-container');
+            container.innerHTML = '';
+            
+            allStudents.forEach(row => {
+                // Safely convert everything to string to prevent search crashes
+                const name = String(row.c[1]?.v || '').toLowerCase();
+                const batch = String(row.c[2]?.v || '').toLowerCase();
+                const room = String(row.c[3]?.v || '').toLowerCase();
+                const phone = String(row.c[4]?.v || '');
+                const status = String(row.c[5]?.v || '').toUpperCase();
+
+                if(status === 'APPROVED' && name.includes(nQuery) && batch.includes(bQuery) && room.includes(rQuery)) {
+                    container.innerHTML += `
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-lg capitalize">${row.c[1]?.v}</h3>
+                                <p class="text-[11px] text-slate-400 font-semibold mt-1 uppercase tracking-tight">
+                                    <i class="fa-solid fa-graduation-cap mr-1"></i> ${row.c[2]?.v} &nbsp; 
+                                    <i class="fa-solid fa-door-open mr-1 ml-2"></i> Room ${row.c[3]?.v}
+                                </p>
+                            </div>
+                            <a href="tel:${phone}" class="bg-blue-600 text-white h-12 w-12 rounded-full flex items-center justify-center shadow-lg shadow-blue-100"><i class="fa-solid fa-phone"></i></a>
+                        </div>`;
+                }
+            });
+            if(container.innerHTML === '') container.innerHTML = '<div class="text-center py-20 text-slate-400 font-medium">No matches found.</div>';
+        }
+    </script>
+
 
 </body>
 </html>
