@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Sushruta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-6">
+
+    <div id="login-screen" class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-xl shadow-2xl">
+        <h2 class="text-2xl font-bold mb-4 text-blue-400">Admin Login</h2>
+        <input type="password" id="adminPass" placeholder="Enter Admin Password" class="w-full p-3 rounded bg-gray-700 mb-4 outline-none">
+        <button onclick="checkPass()" class="w-full bg-blue-600 py-3 rounded font-bold">Access Panel</button>
+    </div>
+
+    <div id="admin-content" class="hidden">
+        <h1 class="text-3xl font-bold mb-6">Pending Verifications</h1>
+        <p class="mb-4 text-gray-400">To approve a student, go to your Google Sheet and change their status to <span class="text-green-400 font-mono text-sm">Approved</span>.</p>
+        
+        <div id="pending-container" class="grid gap-4">
+            </div>
+
+        <a href="https://docs.google.com/spreadsheets/d/1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk/edit" target="_blank" class="fixed bottom-6 right-6 bg-green-600 p-4 rounded-full shadow-lg font-bold">Open Google Sheet to Approve</a>
+    </div>
+
+    <script>
+        function checkPass() {
+            const pass = document.getElementById('adminPass').value;
+            if(pass === "MAMC123") { // Change this to your desired password
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+                loadPending();
+            } else {
+                alert("Incorrect Password!");
+            }
+        }
+
+        function loadPending() {
+            const SHEET_ID = '1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk';
+            fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Directory&range=A2:F100`)
+            .then(res => res.text()).then(rep => {
+                const data = JSON.parse(rep.substr(47).slice(0, -2));
+                const container = document.getElementById('pending-container');
+                container.innerHTML = '';
+                
+                data.table.rows.forEach(row => {
+                    const status = row.c[5]?.v || 'Pending';
+                    if(status !== 'Approved') {
+                        container.innerHTML += `
+                            <div class="bg-gray-800 p-4 rounded-lg border-l-4 border-yellow-500">
+                                <h3 class="font-bold text-lg">${row.c[1]?.v}</h3>
+                                <p class="text-sm text-gray-400">Room: ${row.c[3]?.v} | Batch: ${row.c[2]?.v}</p>
+                                <p class="text-xs text-yellow-500 mt-2 font-bold uppercase">Status: ${status}</p>
+                            </div>`;
+                    }
+                });
+                if(container.innerHTML === '') container.innerHTML = "No pending requests!";
+            });
+        }
+    </script>
+</body>
+</html>
+  
