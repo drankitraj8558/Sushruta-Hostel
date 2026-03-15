@@ -79,30 +79,31 @@
         }
 
         function loadPending() {
-            const SHEET_ID = '1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk';
-            const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Directory&range=A2:F100`;
+    const SHEET_ID = '1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk';
+    // CRITICAL: We added &sheet=Directory to the URL below
+    const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Directory&tqx=out:json`;
 
-            fetch(URL).then(res => res.text()).then(rep => {
-                const data = JSON.parse(rep.substr(47).slice(0, -2));
-                const container = document.getElementById('pending-container');
-                container.innerHTML = '';
-                let count = 0;
-                data.table.rows.forEach(row => {
-                    const status = row.c[5] ? row.c[5].v : '';
-                    if(status.toUpperCase() !== 'APPROVED') {
-                        count++;
-                        container.innerHTML += `
-                            <div class="bg-slate-800 p-5 rounded-xl border-l-4 border-yellow-500 shadow-lg text-left">
-                                <h3 class="font-bold text-lg text-white">${row.c[1]?.v || 'New User'}</h3>
-                                <p class="text-sm text-slate-400">Room: ${row.c[3]?.v} | Batch: ${row.c[2]?.v}</p>
-                                <div class="mt-4 flex gap-2">
-                                     <span class="text-[10px] bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded uppercase font-bold tracking-tighter">Needs Approval</span>
-                                </div>
-                            </div>`;
-                    }
-                });
-                if(count === 0) container.innerHTML = "✅ No pending requests.";
-            });
+    fetch(URL).then(res => res.text()).then(rep => {
+        const data = JSON.parse(rep.substr(47).slice(0, -2));
+        const container = document.getElementById('pending-container');
+        container.innerHTML = '';
+        let count = 0;
+        data.table.rows.forEach(row => {
+            const status = row.c[5] ? row.c[5].v : '';
+            // This makes it work regardless of "Approved", "approved", or "APPROVED"
+            if(String(status).toUpperCase() !== 'APPROVED') {
+                count++;
+                container.innerHTML += `
+                    <div class="bg-slate-800 p-5 rounded-xl border-l-4 border-yellow-500 shadow-lg text-left mb-4">
+                        <h3 class="font-bold text-lg text-white">${row.c[1]?.v || 'New User'}</h3>
+                        <p class="text-sm text-slate-400 font-bold">BATCH: ${row.c[2]?.v} | ROOM: ${row.c[3]?.v}</p>
+                    </div>`;
+            }
+        });
+        if(count === 0) container.innerHTML = "✅ All residents verified!";
+    });
+}
+
         }
     </script>
 </body>
