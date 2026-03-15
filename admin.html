@@ -46,45 +46,42 @@
             }
         }
 
-        function loadPending() {
+                function loadPending() {
             const SHEET_ID = '1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk';
-            // Corrected URL with backticks and sheet name
+            
+            // We added &sheet=Directory to tell Google exactly where to look
             const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Directory&range=A2:F100`;
 
             fetch(URL)
             .then(res => res.text())
             .then(rep => {
+                // This removes the "google.visualization..." junk and gives us clean data
                 const data = JSON.parse(rep.substr(47).slice(0, -2));
                 const container = document.getElementById('pending-container');
                 container.innerHTML = '';
                 
                 let count = 0;
                 data.table.rows.forEach(row => {
+                    // Check Column F (index 5) for Status
                     const status = row.c[5] ? row.c[5].v : '';
+                    
                     if(status !== 'Approved') {
                         count++;
                         container.innerHTML += `
-                            <div class="bg-gray-800 p-5 rounded-lg border-l-4 border-yellow-500 shadow-lg">
+                            <div class="bg-gray-800 p-5 rounded-lg border-l-4 border-yellow-500 shadow-lg mb-4">
                                 <h3 class="font-bold text-xl text-white">${row.c[1] ? row.c[1].v : 'No Name'}</h3>
-                                <div class="text-sm text-gray-400 mt-2 space-y-1">
-                                    <p>Room: ${row.c[3] ? row.c[3].v : 'N/A'}</p>
+                                <div class="text-sm text-gray-400 mt-2">
                                     <p>Batch: ${row.c[2] ? row.c[2].v : 'N/A'}</p>
+                                    <p>Room: ${row.c[3] ? row.c[3].v : 'N/A'}</p>
                                     <p>Phone: ${row.c[4] ? row.c[4].v : 'N/A'}</p>
                                 </div>
-                                <div class="mt-4 text-[10px] text-yellow-500 font-bold uppercase tracking-widest">Awaiting Approval</div>
+                                <div class="mt-4 text-[10px] text-yellow-500 font-bold uppercase tracking-widest text-right">Pending Approval</div>
                             </div>`;
                     }
                 });
 
                 if(count === 0) {
-                    container.innerHTML = '<div class="text-center py-10 text-gray-500">✅ All residents verified! No pending requests.</div>';
+                    container.innerHTML = '<div class="text-center py-10 text-gray-500">✅ No pending requests!</div>';
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                document.getElementById('pending-container').innerHTML = '<p class="text-red-500 text-center">Error connecting to Google Sheets.</p>';
             });
         }
-    </script>
-</body>
-</html>
