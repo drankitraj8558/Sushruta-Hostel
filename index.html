@@ -46,43 +46,53 @@
         <p class="text-xs mt-2 text-blue-400">Created by Students for Students</p>
     </footer>
 
-    <script>
+    <section id="directory" class="p-8 bg-slate-100 min-h-screen">
+        <h2 class="text-3xl font-bold text-center mb-8">Resident Directory</h2>
+        <div id="directory-container" class="max-w-2xl mx-auto">
+            <p class="text-center text-gray-500">Loading directory...</p>
+        </div>
+    </section>
+    
+        <script>
         const SHEET_ID = '1Z3MgzGshtzETmP_GOCIAtQvX9rEfy0hdirOjPIgutPk';
-        const SHEET_TITLE = 'Notices';
-        const SHEET_RANGE = 'A2:C20'; // Reads Date, Title, Message
-        
-        const FULL_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_TITLE}&range=${SHEET_RANGE}`;
 
-        fetch(FULL_URL)
-        .then(res => res.text())
-        .then(rep => {
+        // 1. FETCH NOTICES (From 'Notices' tab)
+        fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Notices&range=A2:C10`)
+        .then(res => res.text()).then(rep => {
             const data = JSON.parse(rep.substr(47).slice(0, -2));
             const container = document.getElementById('notice-container');
-            container.innerHTML = ''; // Clear the loading text
-            
+            container.innerHTML = '';
             data.table.rows.forEach(row => {
-                const date = row.c[0] ? row.c[0].f : '';
-                const title = row.c[1] ? row.c[1].v : '';
-                const msg = row.c[2] ? row.c[2].v : '';
-
-                const noticeHtml = `
-                    <div class="border-l-8 border-blue-600 p-6 bg-blue-50 rounded-r-xl shadow-sm text-left transition transform hover:scale-105">
-                        <span class="text-xs text-blue-700 font-bold uppercase tracking-widest">${date}</span>
-                        <h3 class="font-bold text-xl mt-1 text-slate-800">${title}</h3>
-                        <p class="text-gray-600 mt-2 leading-relaxed">${msg}</p>
-                    </div>
-                `;
-                container.innerHTML += noticeHtml;
+                container.innerHTML += `
+                    <div class="border-l-4 border-blue-600 p-4 bg-blue-50 rounded shadow-sm text-left mb-4">
+                        <span class="text-xs text-blue-600 font-bold">${row.c[0]?.f || ''}</span>
+                        <h3 class="font-bold text-lg">${row.c[1]?.v || ''}</h3>
+                        <p class="text-gray-600 text-sm">${row.c[2]?.v || ''}</p>
+                    </div>`;
             });
+        });
 
-            if(data.table.rows.length === 0) {
-                container.innerHTML = '<p class="text-gray-400">No active notices at the moment.</p>';
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            document.getElementById('notice-container').innerHTML = '<p class="text-red-500">Error loading notices. Please check connection.</p>';
+        // 2. FETCH DIRECTORY (From 'Directory' tab)
+        fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=Directory&range=A2:F100`)
+        .then(res => res.text()).then(rep => {
+            const data = JSON.parse(rep.substr(47).slice(0, -2));
+            const container = document.getElementById('directory-container');
+            if(!container) return; // Safety check
+            
+            container.innerHTML = '';
+            data.table.rows.forEach(row => {
+                const status = row.c[5]?.v || ''; // Column F
+                
+                // THE LOOPHOLE FIX: Only show if Status is exactly "Approved"
+                if(status === 'Approved') {
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4">
+                            <h3 class="font-bold text-blue-800 text-lg">${row.c[1]?.v || ''}</h3>
+                            <p class="text-sm text-gray-600">Batch: ${row.c[2]?.v || ''} | Room: ${row.c[3]?.v || ''}</p>
+                            <a href="tel:${row.c[4]?.v || ''}" class="text-blue-600 mt-2 block font-medium">📞 ${row.c[4]?.v || ''}</a>
+                        </div>`;
+                }
+            });
+            if(container.innerHTML === '') container.innerHTML = '<p class="text-gray-400">No verified residents found.</p>';
         });
     </script>
-</body>
-</html>
